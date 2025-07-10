@@ -25,7 +25,7 @@ struct CliArgs {
 
     /// Show Location Debug Details
     #[arg(short, long, default_value = "false")]
-    location_debug: bool,
+    print_debug: bool,
 }
 
 #[tokio::main]
@@ -38,10 +38,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match env::var(OPENWEATHERMAP_API_KEY) {
         Ok(api_key) => {
             let location_client = LocationClient::new(args.zip.clone(), args.country.clone(), api_key.clone());
-            let location = location_client.get_location(args.location_debug).await?;
+            let location = location_client.get_location(args.print_debug).await?;
 
             let weather_client = WeatherClient::new(location, args.units.clone(), api_key.clone());
-            weather_client.get_current_weather(args.units.clone(), args.location_debug.clone()).await?;
+            weather_client.get_current_weather(args.units.clone(), args.print_debug.clone()).await?;
         }
         Err(env::VarError::NotPresent) => handle_not_present(),
         Err(env::VarError::NotUnicode(_)) => handle_invalid_utf8(),
