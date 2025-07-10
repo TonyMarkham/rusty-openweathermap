@@ -30,7 +30,6 @@ struct CliArgs {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Load environment variables from .env file
     dotenv().ok();
 
     let args = CliArgs::parse();
@@ -43,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let weather_client = WeatherClient::new(location, args.units.clone(), api_key.clone());
             weather_client.get_current_weather(args.units.clone(), args.print_debug.clone()).await?;
         }
-        Err(env::VarError::NotPresent) => handle_not_present(),
+        Err(env::VarError::NotPresent) => handle_no_api_key_set(),
         Err(env::VarError::NotUnicode(_)) => handle_invalid_utf8(),
     }
 
@@ -51,10 +50,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 
-fn handle_not_present() {
+fn handle_no_api_key_set() {
     println!("{} is not set", OPENWEATHERMAP_API_KEY);
 }
 
-fn handle_invalid_utf8() {
+fn handle_invalid_utf8(){
     println!("{} contains invalid UTF-8", OPENWEATHERMAP_API_KEY);
 }

@@ -1,4 +1,14 @@
-﻿pub mod types;
+﻿//! # Weather Module
+//!
+//! This module provides functionality for fetching current weather information
+//! using the OpenWeatherMap Current Weather API.
+//!
+//! ## Components
+//!
+//! - `WeatherClient`: Client for making weather API requests
+//! - Weather data types: Various structures representing weather information
+
+pub mod types;
 pub mod client;
 
 pub use types::*;
