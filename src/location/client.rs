@@ -19,7 +19,7 @@ impl LocationClient {
         }
     }
 
-    pub async fn get_location(&self) -> Result<Location, Box<dyn std::error::Error>> {
+    pub async fn get_location(&self, debug: bool) -> Result<Location, Box<dyn std::error::Error>> {
         let client = reqwest::Client::new();
 
         let request = client
@@ -30,10 +30,12 @@ impl LocationClient {
             ])
             .build()?;
 
-        // Hide the API key when printing
-        let url_string = request.url().to_string();
-        let safe_url = url_string.replace(&self.api_key, "{api_key}");
-        println!("🌐 Location Endpoint: {}", safe_url);
+        if debug{
+            // Hide the API key when printing
+            let url_string = request.url().to_string();
+            let safe_url = url_string.replace(&self.api_key, "{api_key}");
+            println!("🌐 Location Endpoint: {}", safe_url);
+        }
 
         let response = client.execute(request).await?;
 
@@ -43,6 +45,14 @@ impl LocationClient {
 
         let location: Location = response.json().await?;
 
+        if debug{
+            println!("zip: {}", location.zip);
+            println!("name: {}", location.name);
+            println!("country: {}", location.country);
+            println!("lat: {}", location.lat);
+            println!("lon: {}", location.lon);
+        }
+        
         Ok(location)
     }
 }
