@@ -9,9 +9,7 @@
 
 pub mod weather;
 pub mod location;
-pub mod http_client;
 
 // Re-export commonly used types
 pub use weather::{WeatherResponse, WeatherClient};
 pub use location::{Location, LocationClient};
-pub use http_client::HttpClient;

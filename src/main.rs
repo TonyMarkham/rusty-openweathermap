@@ -32,7 +32,11 @@ struct CliArgs {
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
+    // Try to load .env file and report if it was found
+    match dotenv() {
+        Ok(_) => println!("Loaded .env file successfully"),
+        Err(e) => println!("Warning: Could not load .env file: {}", e),
+    }
     run().await
 }
 

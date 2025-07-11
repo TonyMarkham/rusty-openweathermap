@@ -1,5 +1,4 @@
 ﻿use super::types::Location;
-use crate::http_client::HttpClient;
 use std::collections::HashMap;
 
 // https://api.openweathermap.org/geo/1.0/zip?zip=N7L,CA&appid={api_key}
@@ -14,7 +13,8 @@ pub struct LocationClient {
     api_key: String,
     zip: String,
     country: String,
-    http_client: HttpClient,
+    #[cfg(not(target_arch = "wasm32"))]
+    client: reqwest::Client,
 }
 
 impl LocationClient {
@@ -34,7 +34,8 @@ impl LocationClient {
             zip,
             country,
             api_key,
-            http_client: HttpClient::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            client: reqwest::Client::new(),
         }
     }
 
@@ -81,22 +82,92 @@ impl LocationClient {
             println!("🌐 Location Endpoint: {}?{}", GEOCODING_API_BASE_URL, safe_params);
         }
 
-        let response = self.http_client.get(GEOCODING_API_BASE_URL, params).await?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let response = self.client
+                .get(GEOCODING_API_BASE_URL)
+                .query(&params)
+                .send()
+                .await?;
 
-        if response.status != 200 {
-            return Err(format!("API request failed with status: {}", response.status).into());
+            if response.status() != 200 {
+                return Err(format!("API request failed with status: {}", response.status()).into());
+            }
+
+            let body = response.text().await?;
+            let location: Location = serde_json::from_str(&body)?;
+
+            if debug {
+                println!("zip: {}", location.zip);
+                println!("name: {}", location.name);
+                println!("country: {}", location.country);
+                println!("lat: {}", location.lat);
+                println!("lon: {}", location.lon);
+            }
+
+            Ok(location)
         }
 
-        let location: Location = serde_json::from_str(&response.body)?;
+        #[cfg(target_arch = "wasm32")]
+        {
+            use wasm_bindgen::prelude::*;
+            use wasm_bindgen_futures::JsFuture;
+            use web_sys::{Request, RequestInit, Response};
 
-        if debug {
-            println!("zip: {}", location.zip);
-            println!("name: {}", location.name);
-            println!("country: {}", location.country);
-            println!("lat: {}", location.lat);
-            println!("lon: {}", location.lon);
+            // Build URL with query parameters
+            let mut url_with_params = GEOCODING_API_BASE_URL.to_string();
+            if !params.is_empty() {
+                url_with_params.push('?');
+                let query_params: Vec<String> = params
+                    .iter()
+                    .map(|(k, v)| format!("{}={}", k, v))
+                    .collect();
+                url_with_params.push_str(&query_params.join("&"));
+            }
+
+            let mut opts = RequestInit::new();
+            opts.method("GET");
+
+            let request = Request::new_with_str_and_init(&url_with_params, &opts)
+                .map_err(|e| format!("Failed to create request: {:?}", e))?;
+
+            let window = web_sys::window()
+                .ok_or("No window object available")?;
+
+            let resp_value = JsFuture::from(window.fetch_with_request(&request))
+                .await
+                .map_err(|e| format!("Fetch failed: {:?}", e))?;
+
+            let resp: Response = resp_value.dyn_into()
+                .map_err(|_| "Failed to convert response")?;
+
+            let status = resp.status();
+
+            if status != 200 {
+                return Err(format!("API request failed with status: {}", status).into());
+            }
+
+            let text_promise = resp.text()
+                .map_err(|e| format!("Failed to get text promise: {:?}", e))?;
+
+            let text = JsFuture::from(text_promise)
+                .await
+                .map_err(|e| format!("Failed to get text: {:?}", e))?;
+
+            let body = text.as_string()
+                .unwrap_or_else(|| "Failed to convert response to string".to_string());
+
+            let location: Location = serde_json::from_str(&body)?;
+
+            if debug {
+                println!("zip: {}", location.zip);
+                println!("name: {}", location.name);
+                println!("country: {}", location.country);
+                println!("lat: {}", location.lat);
+                println!("lon: {}", location.lon);
+            }
+
+            Ok(location)
         }
-
-        Ok(location)
     }
 }
