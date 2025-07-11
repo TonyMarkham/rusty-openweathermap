@@ -42,7 +42,11 @@ cargo build --release
 Or, if you want to build the WebAssembly version:
 
 ```bash
-cargo build --target wasm32-unknown-unknown --features wasm --release
+# Install wasm-pack if you don't have it
+cargo install wasm-pack
+
+# Build with wasm-pack for better browser compatibility
+wasm-pack build --target web --features wasm
 ```
 
 ## Usage
@@ -141,8 +145,15 @@ cargo test
 ### Building for WebAssembly
 
 ```bash
-cargo build --target wasm32-unknown-unknown --features wasm
+# Compile using wasm-pack for optimal results
+wasm-pack build --target web --features wasm
 ```
+
+The above command will:
+1. Compile your Rust code to WebAssembly
+2. Generate JavaScript bindings
+3. Create necessary package.json and TypeScript definition files
+4. Output everything to the `pkg/` directory
 
 ## WebAssembly Support
 
@@ -151,21 +162,32 @@ This application can be compiled to WebAssembly for use in web browsers:
 - Supports the same core functionality as the CLI version
 - Can be integrated into web applications
 - Uses the browser's fetch API for HTTP requests
+- Platform-agnostic implementation works across browsers
+
+### WASM Build Target Options
+
+- `--target web`: For direct use in browsers with ES modules (most platform-agnostic)
+- `--target bundler`: For use with bundlers like webpack
+- `--target nodejs`: For Node.js environments
+- `--target no-modules`: For use with script tags
 
 ### Example WASM Usage
 
 ```javascript
-// Import the WASM package
-import * as weather from 'weather';
+// Import the WASM package (using ES modules)
+import init, { getLocation, getCurrentWeather } from './pkg/weather.js';
 
-// Get weather for a location
-async function getWeather() {
-  const location = await weather.getLocation('N7L', 'CA');
-  const weatherData = await weather.getCurrentWeather(location, 'metric');
+async function run() {
+  // Initialize the WASM module
+  await init();
+
+  // Get weather for a location
+  const location = await getLocation('N7L', 'CA');
+  const weatherData = await getCurrentWeather(location, 'metric');
   console.log(weatherData);
 }
 
-getWeather();
+run();
 ```
 
 ## License
