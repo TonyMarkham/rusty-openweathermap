@@ -65,7 +65,7 @@ Run the CLI with your ZIP code:
   - `standard`: Kelvin for temperature, m/s for wind
   - `metric`: Celsius for temperature, m/s for wind
   - `imperial`: Fahrenheit for temperature, mph for wind
-- `-l, --print-debug`: Show location debug details (default: false)
+- `-n, --no-display`: Hide detailed output (default: false)
 
 ### Examples
 
@@ -75,10 +75,10 @@ Get weather for a US ZIP code in imperial units:
 ./target/release/weather-cli --zip 90210 --country US --units imperial
 ```
 
-Get weather for a Canadian postal code in metric units with debug info:
+Get weather for a Canadian postal code in metric units with full output:
 
 ```bash
-./target/release/weather-cli --zip N7L --country CA --units metric --print-debug
+./target/release/weather-cli --zip N7L --country CA --units metric
 ```
 
 ## Project Structure
@@ -112,15 +112,17 @@ This tool integrates with two OpenWeatherMap APIs:
 
 ## Dependencies
 
-- `clap`: Command-line argument parsing
-- `reqwest`: HTTP client for API requests
-- `tokio`: Async runtime
-- `serde`: JSON serialization/deserialization
-- `dotenv`: Environment variable loading
-- `wasm-bindgen`: WebAssembly bindings for JavaScript interoperability
-- `wasm-bindgen-futures`: Future support for WASM
-- `console_error_panic_hook`: Better error handling in WASM
-- `serde-wasm-bindgen`: Serialization support for WASM
+- `clap`: Command-line argument parsing (v4.5.41)
+- `reqwest`: HTTP client for API requests (v0.12.22)
+- `tokio`: Async runtime (v1.46.1)
+- `serde`: JSON serialization/deserialization (v1.0.219)
+- `serde_json`: JSON support (v1.0.140)
+- `urlencoding`: URL encoding utilities (v2.1.3)
+- `dotenv`: Environment variable loading (v0.15.0)
+- `wasm-bindgen`: WebAssembly bindings for JavaScript interoperability (v0.2.100)
+- `wasm-bindgen-futures`: Future support for WASM (v0.4.50)
+- `console_error_panic_hook`: Better error handling in WASM (v0.1.7)
+- `serde-wasm-bindgen`: Serialization support for WASM (v0.6.5)
 
 ## Development
 
@@ -201,3 +203,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ---
 
 *Note: This tool requires a valid OpenWeatherMap API key to function properly.*
+
+---
+*Last updated: July 11, 2025*

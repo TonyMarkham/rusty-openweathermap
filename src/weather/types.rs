@@ -1,15 +1,5 @@
 ﻿use serde::{Deserialize, Serialize};
 
-/// Common interface for weather response types
-pub trait WeatherInfo {
-    fn name(&self) -> &str;
-    fn get_data(&self) -> String;
-}
-
-/// Represents coordinate information with latitude and longitude.
-///
-/// This structure contains geographic coordinates as returned by the
-/// OpenWeatherMap Current Weather API.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Coord {
     /// Longitude in decimal degrees
@@ -143,12 +133,49 @@ pub struct WeatherResponse {
     pub cod: i32,
 }
 
-impl WeatherInfo for WeatherResponse {
-    fn name(&self) -> &str {
-        &self.name
+impl WeatherResponse {
+    pub fn detailed_display(&self, units: String) -> String {
+        let temp_display = get_temperature_display(self.main.temp, &units);
+        let wind_display = get_speed_display(self.wind.speed, &units);
+        let mut info_main = "";
+        let mut info_description = "";
+        if let Some(weather_info) = self.weather.first(){
+            info_main = &weather_info.main;
+            info_description = &weather_info.description;
+        }
+
+        format!(
+            r#"🌤️ Weather in {}
+📍 Coordinates: ({}, {})
+🌡️ Temperature: {}
+💨 Wind: {} at {}°
+☁️ Clouds: {}%
+🌈 Conditions: {} ({})"#,
+            self.name,
+            self.coord.lat,
+            self.coord.lon,
+            temp_display,
+            wind_display,
+            self.wind.deg,
+            self.clouds.all,
+            info_main,
+            info_description,
+        )
     }
-    
-    fn get_data(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "{}".to_string())
+}
+
+fn get_temperature_display(temp: f64, units: &str) -> String {
+    match units {
+        "metric" => format!("{:.1}°C", temp),
+        "imperial" => format!("{:.1}°F", temp),
+        "standard" | _ => format!("{:.1}°K", temp),
+    }
+}
+
+fn get_speed_display(speed: f64, units: &str) -> String {
+    match units {
+        "metric" => format!("{:.1} m/s", speed),
+        "imperial" => format!("{:.1} mph", speed),
+        "standard" | _ => format!("{:.1} m/s", speed),
     }
 }

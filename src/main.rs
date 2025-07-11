@@ -2,7 +2,6 @@ use std::env;
 use clap::Parser;
 use weather::{location::LocationClient, weather::WeatherClient};
 
-#[cfg(not(target_arch = "wasm32"))]
 use dotenv::dotenv;
 
 const OPENWEATHERMAP_API_KEY: &str = "OPENWEATHERMAP_API_KEY";
@@ -26,24 +25,16 @@ struct CliArgs {
 
     /// Show Location Debug Details
     #[arg(short, long, default_value = "false")]
-    print_debug: bool,
+    no_display: bool,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Try to load .env file and report if it was found
     match dotenv() {
         Ok(_) => println!("Loaded .env file successfully"),
         Err(e) => println!("Warning: Could not load .env file: {}", e),
     }
     run().await
-}
-
-#[cfg(target_arch = "wasm32")]
-fn main() {
-    // WASM version doesn't need a main function for the CLI
-    // The WASM bindings will be used instead
 }
 
 async fn run() -> Result<(), Box<dyn std::error::Error>> {
@@ -52,10 +43,18 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     match env::var(OPENWEATHERMAP_API_KEY) {
         Ok(api_key) => {
             let location_client = LocationClient::new(args.zip.clone(), args.country.clone(), api_key.clone());
-            let location = location_client.get_location(args.print_debug).await?;
+            let location = location_client.get_location().await?;
+
+            if !args.no_display {
+                println!("{}", location.detailed_display());
+            }
 
             let weather_client = WeatherClient::new(location, args.units.clone(), api_key.clone());
-            weather_client.get_current_weather(args.units.clone(), args.print_debug.clone()).await?;
+            let weather_response = weather_client.get_current_weather().await?;
+
+            if !args.no_display {
+                println!("{}", weather_response.detailed_display(args.units.clone()));
+            }
         }
         Err(env::VarError::NotPresent) => handle_no_api_key_set(),
         Err(env::VarError::NotUnicode(_)) => handle_invalid_utf8(),
