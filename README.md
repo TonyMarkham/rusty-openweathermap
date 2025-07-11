@@ -1,6 +1,6 @@
-﻿# Weather CLI
+﻿# Weather App
 
-A command-line tool written in Rust that provides current weather information for a specified location using OpenWeatherMap API. The application supports both CLI and WebAssembly environments.
+A Rust-based application that provides current weather information for a specified location using OpenWeatherMap API. The application supports both CLI and web-based interfaces, allowing users to access weather data through their preferred method.
 
 ## Features
 
@@ -10,6 +10,8 @@ A command-line tool written in Rust that provides current weather information fo
 - 🔒 Secure API key handling through environment variables
 - 🧩 Modular architecture for easy extension and maintenance
 - 🌐 WebAssembly (WASM) support for running in browsers
+- 🖥️ Modern web interface for easy interaction with the weather service
+- 🌈 Responsive design that works on desktop and mobile devices
 
 ## Installation
 
@@ -17,8 +19,9 @@ A command-line tool written in Rust that provides current weather information fo
 
 - Rust and Cargo (1.88.0 or newer)
 - OpenWeatherMap API key (obtain from [OpenWeatherMap](https://openweathermap.org/api))
+- Node.js and npm (for web interface only)
 
-### Setup
+### Common Setup
 
 1. Clone the repository:
 
@@ -33,29 +36,67 @@ cd rusty-openweathermap
 OPENWEATHERMAP_API_KEY=your_api_key_here
 ```
 
-3. Build the project:
+### CLI Setup
+
+Build the command-line interface tool:
 
 ```bash
 cargo build --release
 ```
 
-Or, if you want to build the WebAssembly version:
+The executable will be available at `./target/release/weather-cli`
+
+### Web GUI Setup
+
+1. Install Node.js dependencies:
 
 ```bash
-# Install wasm-pack if you don't have it
-cargo install wasm-pack
+npm install
+```
 
-# Build with wasm-pack for better browser compatibility
-wasm-pack build --target web --features wasm
+2. Install wasm-pack if you don't have it:
+
+```bash
+cargo install wasm-pack
+```
+
+3. Build the WebAssembly module and prepare the web interface:
+
+```bash
+# Using npm script (recommended)
+npm run build-wasm-release
+
+# Or manually
+wasm-pack build --target web --out-dir web-gui/pkg --release
 ```
 
 ## Usage
+
+### Command Line Interface
 
 Run the CLI with your ZIP code:
 
 ```bash
 ./target/release/weather-cli --zip N7L --country CA
 ```
+
+### Web Interface
+
+The application includes a web-based GUI that can be accessed through a browser:
+
+1. Build the WebAssembly module:
+```bash
+npm run build-wasm
+```
+
+2. Start the local web server:
+```bash
+npm run serve
+```
+
+3. Navigate to `http://localhost:8000` in your browser
+
+4. Enter your ZIP/postal code, country, preferred units, and your OpenWeatherMap API key to get weather information
 
 ### Command-line Options
 
@@ -96,7 +137,13 @@ Get weather for a Canadian postal code in metric units with full output:
 │   │   └── types.rs        # Weather data structures
 │   ├── lib.rs              # Library exports
 │   └── main.rs             # CLI entry point and argument parsing
-├── Cargo.toml              # Project dependencies
+├── web-gui/                # Web interface files
+│   ├── index.html          # Main HTML page
+│   ├── style.css           # Styling for the web interface
+│   ├── script.js           # JavaScript for web interface
+│   └── pkg/                # WebAssembly compiled output
+├── Cargo.toml              # Rust dependencies
+├── package.json            # Node.js dependencies and scripts
 └── .env                    # Environment variables (not in repo)
 ```
 
@@ -126,7 +173,7 @@ This tool integrates with two OpenWeatherMap APIs:
 
 ## Development
 
-### Building
+### Building the CLI
 
 ```bash
 cargo build
@@ -147,15 +194,30 @@ cargo test
 ### Building for WebAssembly
 
 ```bash
-# Compile using wasm-pack for optimal results
-wasm-pack build --target web --features wasm
+# Using npm script (recommended)
+npm run build-wasm
+
+# Or manually with wasm-pack
+wasm-pack build --target web --out-dir web-gui/pkg
 ```
 
-The above command will:
+The above commands will:
 1. Compile your Rust code to WebAssembly
 2. Generate JavaScript bindings
 3. Create necessary package.json and TypeScript definition files
-4. Output everything to the `pkg/` directory
+4. Output everything to the `web-gui/pkg/` directory
+
+### Developing the Web Interface
+
+```bash
+# Build WASM and start local server in one command
+npm run dev
+
+# Or start server only (if WASM is already built)
+npm run serve
+```
+
+This will start a local development server at http://localhost:8000 where you can test the web interface.
 
 ## WebAssembly Support
 
@@ -183,14 +245,25 @@ async function run() {
   // Initialize the WASM module
   await init();
 
-  // Get weather for a location
-  const location = await getLocation('N7L', 'CA');
-  const weatherData = await getCurrentWeather(location, 'metric');
-  console.log(weatherData);
+  try {
+    // Get location data first
+    const location = await getLocation('N7L', 'CA', 'your_api_key');
+
+    // Then get weather data for that location
+    const weatherData = await getCurrentWeather(location, 'metric', 'your_api_key');
+
+    // Display the results
+    console.log('Location:', location);
+    console.log('Weather:', weatherData);
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+  }
 }
 
 run();
 ```
+
+The web GUI in this project provides a complete implementation example of how to use the WebAssembly module with a form-based interface.
 
 ## License
 
