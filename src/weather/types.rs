@@ -1,5 +1,11 @@
 ﻿use serde::{Deserialize, Serialize};
 
+/// Common interface for weather response types
+pub trait WeatherInfo {
+    fn name(&self) -> &str;
+    fn get_data(&self) -> String;
+}
+
 /// Represents coordinate information with latitude and longitude.
 ///
 /// This structure contains geographic coordinates as returned by the
@@ -135,4 +141,14 @@ pub struct WeatherResponse {
     pub name: String,
     /// Internal parameter for API response
     pub cod: i32,
+}
+
+impl WeatherInfo for WeatherResponse {
+    fn name(&self) -> &str {
+        &self.name
+    }
+    
+    fn get_data(&self) -> String {
+        serde_json::to_string(self).unwrap_or_else(|_| "{}".to_string())
+    }
 }

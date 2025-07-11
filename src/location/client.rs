@@ -1,4 +1,6 @@
 ﻿use super::types::Location;
+use crate::http_client::HttpClient;
+use std::collections::HashMap;
 
 // https://api.openweathermap.org/geo/1.0/zip?zip=N7L,CA&appid={api_key}
 
@@ -12,6 +14,7 @@ pub struct LocationClient {
     api_key: String,
     zip: String,
     country: String,
+    http_client: HttpClient,
 }
 
 impl LocationClient {
@@ -31,6 +34,7 @@ impl LocationClient {
             zip,
             country,
             api_key,
+            http_client: HttpClient::new(),
         }
     }
 
@@ -59,32 +63,33 @@ impl LocationClient {
     /// - API rate limits exceeded
     /// - JSON parsing errors
     pub async fn get_location(&self, debug: bool) -> Result<Location, Box<dyn std::error::Error>> {
-        let client = reqwest::Client::new();
+        let mut params = HashMap::new();
+        params.insert("zip".to_string(), format!("{},{}", self.zip, self.country));
+        params.insert("appid".to_string(), self.api_key.clone());
 
-        let request = client
-            .get(GEOCODING_API_BASE_URL)
-            .query(&[
-                ("zip", &format!("{},{}", self.zip, self.country)),
-                ("appid", &self.api_key),
-            ])
-            .build()?;
-
-        if debug{
-            // Hide the API key when printing
-            let url_string = request.url().to_string();
-            let safe_url = url_string.replace(&self.api_key, "{api_key}");
-            println!("🌐 Location Endpoint: {}", safe_url);
+        if debug {
+            let safe_params = params.iter()
+                .map(|(k, v)| {
+                    if k == "appid" {
+                        format!("{}={}", k, "{api_key}")
+                    } else {
+                        format!("{}={}", k, v)
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("&");
+            println!("🌐 Location Endpoint: {}?{}", GEOCODING_API_BASE_URL, safe_params);
         }
 
-        let response = client.execute(request).await?;
+        let response = self.http_client.get(GEOCODING_API_BASE_URL, params).await?;
 
-        if !response.status().is_success() {
-            return Err(format!("API request failed with status: {}", response.status()).into());
+        if response.status != 200 {
+            return Err(format!("API request failed with status: {}", response.status).into());
         }
 
-        let location: Location = response.json().await?;
+        let location: Location = serde_json::from_str(&response.body)?;
 
-        if debug{
+        if debug {
             println!("zip: {}", location.zip);
             println!("name: {}", location.name);
             println!("country: {}", location.country);

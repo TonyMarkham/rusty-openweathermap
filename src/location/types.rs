@@ -1,5 +1,13 @@
 ﻿use serde::{Deserialize, Serialize};
 
+/// Common interface for location types
+pub trait LocationInfo {
+    fn name(&self) -> &str;
+    fn lat(&self) -> f64;
+    fn lon(&self) -> f64;
+    fn country(&self) -> &str;
+}
+
 /// Represents a geographic location with coordinates and address information.
 ///
 /// This structure contains all the essential information about a location
@@ -24,4 +32,22 @@ pub struct Location {
     pub lon: f64,
     /// Two-letter country code (ISO 3166-1 alpha-2)
     pub country: String,
+}
+
+impl LocationInfo for Location {
+    fn name(&self) -> &str {
+        &self.name
+    }
+    
+    fn lat(&self) -> f64 {
+        self.lat
+    }
+    
+    fn lon(&self) -> f64 {
+        self.lon
+    }
+    
+    fn country(&self) -> &str {
+        &self.country
+    }
 }

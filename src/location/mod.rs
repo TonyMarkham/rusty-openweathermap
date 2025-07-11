@@ -7,6 +7,7 @@
 //!
 //! - `LocationClient`: Client for making geocoding API requests
 //! - `Location`: Data structure representing geographic location information
+//! - `LocationInfo`: Common trait for all location types
 
 pub mod types;
 pub mod client;

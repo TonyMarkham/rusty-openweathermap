@@ -7,6 +7,7 @@
 //!
 //! - `WeatherClient`: Client for making weather API requests
 //! - Weather data types: Various structures representing weather information
+//! - `WeatherInfo`: Common trait for all weather response types
 
 pub mod types;
 pub mod client;

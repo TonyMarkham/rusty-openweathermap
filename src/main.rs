@@ -1,10 +1,11 @@
 use std::env;
 use clap::Parser;
+use weather::{location::LocationClient, weather::WeatherClient};
+
+#[cfg(not(target_arch = "wasm32"))]
 use dotenv::dotenv;
-use weather_cli::{location::LocationClient, weather::WeatherClient};
 
 const OPENWEATHERMAP_API_KEY: &str = "OPENWEATHERMAP_API_KEY";
-
 
 #[derive(Parser)]
 #[command(name = "weather_cli")]
@@ -28,10 +29,20 @@ struct CliArgs {
     print_debug: bool,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
+    run().await
+}
 
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    // WASM version doesn't need a main function for the CLI
+    // The WASM bindings will be used instead
+}
+
+async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = CliArgs::parse();
 
     match env::var(OPENWEATHERMAP_API_KEY) {
@@ -48,7 +59,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
 
 fn handle_no_api_key_set() {
     println!("{} is not set", OPENWEATHERMAP_API_KEY);
