@@ -1,6 +1,6 @@
 ﻿# Weather CLI
 
-A command-line tool written in Rust that provides current weather information for a specified location using OpenWeatherMap API.
+A command-line tool written in Rust that provides current weather information for a specified location using OpenWeatherMap API. The application supports both CLI and WebAssembly environments.
 
 ## Features
 
@@ -9,6 +9,7 @@ A command-line tool written in Rust that provides current weather information fo
 - 🔍 Detailed weather information including temperature, wind, clouds, and conditions
 - 🔒 Secure API key handling through environment variables
 - 🧩 Modular architecture for easy extension and maintenance
+- 🌐 WebAssembly (WASM) support for running in browsers
 
 ## Installation
 
@@ -22,8 +23,8 @@ A command-line tool written in Rust that provides current weather information fo
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/weather_cli.git
-cd weather_cli
+git clone https://github.com/TonyMarkham/rusty-openweathermap.git
+cd rusty-openweathermap
 ```
 
 2. Create a `.env` file in the project root with your API key:
@@ -38,12 +39,18 @@ OPENWEATHERMAP_API_KEY=your_api_key_here
 cargo build --release
 ```
 
+Or, if you want to build the WebAssembly version:
+
+```bash
+cargo build --target wasm32-unknown-unknown --features wasm --release
+```
+
 ## Usage
 
 Run the CLI with your ZIP code:
 
 ```bash
-./target/release/weather_cli --zip N7L --country CA
+./target/release/weather-cli --zip N7L --country CA
 ```
 
 ### Command-line Options
@@ -61,13 +68,13 @@ Run the CLI with your ZIP code:
 Get weather for a US ZIP code in imperial units:
 
 ```bash
-./target/release/weather_cli --zip 90210 --country US --units imperial
+./target/release/weather-cli --zip 90210 --country US --units imperial
 ```
 
 Get weather for a Canadian postal code in metric units with debug info:
 
 ```bash
-./target/release/weather_cli --zip N7L --country CA --units metric --print-debug
+./target/release/weather-cli --zip N7L --country CA --units metric --print-debug
 ```
 
 ## Project Structure
@@ -77,7 +84,8 @@ Get weather for a Canadian postal code in metric units with debug info:
 │   ├── location/           # Location-related modules
 │   │   ├── client.rs       # Client for geocoding API
 │   │   ├── mod.rs          # Module exports
-│   │   └── types.rs        # Location data structures
+│   │   ├── types.rs        # Location data structures
+│   │   └── wasm.rs         # WebAssembly bindings for location
 │   ├── weather/            # Weather-related modules
 │   │   ├── client.rs       # Client for weather API
 │   │   ├── mod.rs          # Module exports
@@ -105,6 +113,10 @@ This tool integrates with two OpenWeatherMap APIs:
 - `tokio`: Async runtime
 - `serde`: JSON serialization/deserialization
 - `dotenv`: Environment variable loading
+- `wasm-bindgen`: WebAssembly bindings for JavaScript interoperability
+- `wasm-bindgen-futures`: Future support for WASM
+- `console_error_panic_hook`: Better error handling in WASM
+- `serde-wasm-bindgen`: Serialization support for WASM
 
 ## Development
 
@@ -124,6 +136,36 @@ cargo run -- --zip N7L --country CA
 
 ```bash
 cargo test
+```
+
+### Building for WebAssembly
+
+```bash
+cargo build --target wasm32-unknown-unknown --features wasm
+```
+
+## WebAssembly Support
+
+This application can be compiled to WebAssembly for use in web browsers:
+
+- Supports the same core functionality as the CLI version
+- Can be integrated into web applications
+- Uses the browser's fetch API for HTTP requests
+
+### Example WASM Usage
+
+```javascript
+// Import the WASM package
+import * as weather from 'weather';
+
+// Get weather for a location
+async function getWeather() {
+  const location = await weather.getLocation('N7L', 'CA');
+  const weatherData = await weather.getCurrentWeather(location, 'metric');
+  console.log(weatherData);
+}
+
+getWeather();
 ```
 
 ## License
