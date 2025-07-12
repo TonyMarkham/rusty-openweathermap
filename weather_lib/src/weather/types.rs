@@ -222,29 +222,23 @@ pub async fn get_weather_data(request_json: &str) -> Result<String, JsValue> {
 
 async fn fetch_weather_internal(request: WeatherRequestWasm) -> Result<WeatherResponseWasm, String> {
     console_log!("Creating location client");
+    console_log!("Fetching location");
 
-    let location_client = LocationClient::new(
+    let location = LocationClient::new(
         request.zip.clone(),
         request.country.clone(),
-        request.api_key.clone(),
-    );
-
-    console_log!("Fetching location");
-    let location = location_client
+        request.api_key.clone(), )
         .get_location()
         .await
         .map_err(|e| format!("Location error: {}", e))?;
 
     console_log!("Location found: {:?}", location);
+    console_log!("Fetching weather");
 
-    let weather_client = WeatherClient::new(
+    let weather_response = WeatherClient::new(
         location.clone(),
         request.units.clone(),
-        request.api_key.clone(),
-    );
-
-    console_log!("Fetching weather");
-    let weather_response = weather_client
+        request.api_key.clone(), )
         .get_current_weather()
         .await
         .map_err(|e| format!("Weather error: {}", e))?;
