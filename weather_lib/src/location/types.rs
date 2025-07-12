@@ -1,4 +1,5 @@
 ﻿use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Location {
@@ -14,19 +15,9 @@ pub struct Location {
     pub country: String,
 }
 
-impl Location {
-    pub fn detailed_display(&self) -> String {
-        format!(
-            r#"name: [{}]
-country: [{}]
-zip: [{}]
-lat: [{}]
-lon: [{}]"#,
-            self.name,
-            self.country,
-            self.zip,
-            self.lat,
-            self.lon
-        )
+impl fmt::Display for Location {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "name: [{}]\ncountry: [{}]\nzip: [{}]\nlat: [{}]\nlon: [{}]",
+               self.name, self.country, self.zip, self.lat, self.lon)
     }
 }

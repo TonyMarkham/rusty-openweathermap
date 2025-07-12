@@ -47,7 +47,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let location = location_client.get_location().await?;
 
             if !args.no_display {
-                println!("{}", location.detailed_display());
+                println!("{}", location.to_string());
             }
 
             let weather_client = WeatherClient::new(location, args.units.clone(), api_key.clone());
