@@ -4,13 +4,13 @@ async function initWasm() {
     try {
         console.log('Loading WASM module...');
         // Import the WASM module
-        wasmModule = await import('./pkg/weather.js');
+        wasmModule = await import('./pkg/weather_lib.js');
         console.log('WASM module imported:', wasmModule);
-        
+
         // Initialize the module
         await wasmModule.default();
         console.log('WASM module initialized successfully');
-        
+
         // Check if the function exists
         if (typeof wasmModule.get_weather_data === 'function') {
             console.log('get_weather_data function is available');
@@ -26,12 +26,12 @@ async function initWasm() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initWasm();
-    
+
     const form = document.getElementById('weatherForm');
-    
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const formData = new FormData(form);
         const request = {
             zip: formData.get('zip'),
@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             units: formData.get('units'),
             api_key: formData.get('apiKey')
         };
-        
+
         showLoading();
-        
+
         try {
             const response = await getWeatherData(request);
             if (response.error) {
@@ -60,11 +60,11 @@ async function getWeatherData(request) {
     if (!wasmModule) {
         throw new Error('WASM module not loaded');
     }
-    
+
     if (typeof wasmModule.get_weather_data !== 'function') {
         throw new Error('get_weather_data function not available in WASM module');
     }
-    
+
     try {
         console.log('Calling WASM function with:', request);
         const requestJson = JSON.stringify(request);
@@ -89,7 +89,7 @@ function showResults(response) {
     document.getElementById('error').classList.add('hidden');
     document.getElementById('results').classList.remove('hidden');
     document.getElementById('submitBtn').disabled = false;
-    
+
     // Display location information
     const locationDetails = document.getElementById('locationDetails');
     locationDetails.innerHTML = `
@@ -114,7 +114,7 @@ function showResults(response) {
             <span class="detail-value">${response.location.lon.toFixed(4)}</span>
         </div>
     `;
-    
+
     // Display weather information
     const weatherData = JSON.parse(response.weather);
     const weatherDetails = document.getElementById('weatherDetails');
@@ -151,6 +151,6 @@ function showError(message) {
     document.getElementById('results').classList.add('hidden');
     document.getElementById('error').classList.remove('hidden');
     document.getElementById('submitBtn').disabled = false;
-    
+
     document.getElementById('errorMessage').textContent = message;
 }

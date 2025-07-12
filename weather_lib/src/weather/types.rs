@@ -1,4 +1,8 @@
 ﻿use serde::{Deserialize, Serialize};
+use wasm_bindgen::JsValue;
+use wasm_bindgen::prelude::wasm_bindgen;
+use crate::location::{Location, LocationClient};
+use crate::weather::WeatherClient;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Coord {
@@ -8,10 +12,6 @@ pub struct Coord {
     pub lat: f64,
 }
 
-/// Represents weather condition information.
-///
-/// This structure contains descriptive information about current weather conditions
-/// including condition codes and human-readable descriptions.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Weather {
     /// Weather condition ID (internal OpenWeatherMap identifier)
@@ -24,10 +24,6 @@ pub struct Weather {
     pub icon: String,
 }
 
-/// Represents main weather measurements.
-///
-/// This structure contains the primary weather metrics including temperature,
-/// pressure, humidity, and thermal perception values.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Main {
     /// Current temperature
@@ -48,9 +44,6 @@ pub struct Main {
     pub grnd_level: Option<i32>,
 }
 
-/// Represents wind information.
-///
-/// This structure contains wind speed and direction measurements.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Wind {
     /// Wind speed (units vary by API request: m/s for metric, mph for imperial)
@@ -61,28 +54,18 @@ pub struct Wind {
     pub gust: Option<f64>,
 }
 
-/// Represents cloud coverage information.
-///
-/// This structure contains cloudiness percentage data.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Clouds {
     /// Cloudiness percentage (0-100%)
     pub all: i32,
 }
 
-/// Represents visibility information.
-///
-/// This structure contains visibility distance measurements.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Visibility {
     /// Visibility distance in meters
     pub visibility: i32,
 }
 
-/// Represents system information from the weather API.
-///
-/// This structure contains metadata about the weather data source
-/// and timing information.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Sys {
     /// Internal parameter for data source
@@ -98,11 +81,6 @@ pub struct Sys {
     pub sunset: i64,
 }
 
-/// Represents the complete weather response from the OpenWeatherMap API.
-///
-/// This is the main structure that contains all weather information
-/// for a specific location, including coordinates, current conditions,
-/// temperature, wind, clouds, and system information.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WeatherResponse {
     /// Geographic coordinates of the location
@@ -178,4 +156,105 @@ fn get_speed_display(speed: f64, units: &str) -> String {
         "imperial" => format!("{:.1} mph", speed),
         "standard" | _ => format!("{:.1} m/s", speed),
     }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+macro_rules! console_log {
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WeatherRequestWasm {
+    pub zip: String,
+    pub country: String,
+    pub units: String,
+    pub api_key: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WeatherResponseWasm {
+    pub location: Location,
+    pub weather: String,
+    pub error: Option<String>,
+}
+
+#[wasm_bindgen]
+pub async fn get_weather_data(request_json: &str) -> Result<String, JsValue> {
+    console_log!("WASM function called with: {}", request_json);
+
+    let request: WeatherRequestWasm = serde_json::from_str(request_json)
+        .map_err(|e| {
+            console_log!("JSON parse error: {}", e);
+            JsValue::from_str(&format!("Invalid request: {}", e))
+        })?;
+
+    console_log!("Parsed request: {:?}", request);
+
+    match fetch_weather_internal(request).await {
+        Ok(response) => {
+            console_log!("Weather fetch successful");
+            serde_json::to_string(&response)
+                .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+        }
+        Err(e) => {
+            console_log!("Weather fetch error: {}", e);
+            let error_response = WeatherResponseWasm {
+                location: Location {
+                    zip: String::new(),
+                    name: String::new(),
+                    lat: 0.0,
+                    lon: 0.0,
+                    country: String::new(),
+                },
+                weather: String::new(),
+                error: Some(e),
+            };
+            serde_json::to_string(&error_response)
+                .map_err(|e| JsValue::from_str(&format!("Error serialization failed: {}", e)))
+        }
+    }
+}
+
+async fn fetch_weather_internal(request: WeatherRequestWasm) -> Result<WeatherResponseWasm, String> {
+    console_log!("Creating location client");
+
+    let location_client = LocationClient::new(
+        request.zip.clone(),
+        request.country.clone(),
+        request.api_key.clone(),
+    );
+
+    console_log!("Fetching location");
+    let location = location_client
+        .get_location()
+        .await
+        .map_err(|e| format!("Location error: {}", e))?;
+
+    console_log!("Location found: {:?}", location);
+
+    let weather_client = WeatherClient::new(
+        location.clone(),
+        request.units.clone(),
+        request.api_key.clone(),
+    );
+
+    console_log!("Fetching weather");
+    let weather_response = weather_client
+        .get_current_weather()
+        .await
+        .map_err(|e| format!("Weather error: {}", e))?;
+
+    console_log!("Weather fetch complete");
+
+    Ok(WeatherResponseWasm {
+        location,
+        weather: serde_json::to_string(&weather_response)
+            .map_err(|e| format!("Weather serialization error: {}", e))?,
+        error: None,
+    })
 }

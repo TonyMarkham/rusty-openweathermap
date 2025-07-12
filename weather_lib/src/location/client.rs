@@ -20,6 +20,26 @@ impl LocationClient {
             api_key,
         }
     }
+    
+    pub fn set_zip(&mut self, zip: String){
+        self.zip = zip;
+    }
+    
+    pub fn get_zip(&self) -> String {
+        self.zip.clone()
+    }
+
+    pub fn set_country(&mut self, country: String){
+        self.country = country;
+    }
+    
+    pub fn get_country(&self) -> String {
+        self.country.clone()
+    }
+
+    pub fn set_api_key(&mut self, api_key: String){
+        self.api_key = api_key;
+    }
 
     pub async fn get_location(&self) -> Result<Location, Box<dyn std::error::Error>> {
         let zip = format!("{},{}", &self.zip, &self.country);

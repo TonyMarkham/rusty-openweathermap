@@ -41,16 +41,17 @@ OPENWEATHERMAP_API_KEY=your_api_key_here
 Build the command-line interface tool:
 
 ```bash
-cargo build --release
+cargo build --release -p weather_cli
 ```
 
-The executable will be available at `./target/release/weather-cli`
+The executable will be available at `./target/release/weather_cli`
 
 ### Web GUI Setup
 
 1. Install Node.js dependencies:
 
 ```bash
+cd weather_web
 npm install
 ```
 
@@ -64,10 +65,11 @@ cargo install wasm-pack
 
 ```bash
 # Using npm script (recommended)
+cd weather_web
 npm run build-wasm-release
 
 # Or manually
-wasm-pack build --target web --out-dir web-gui/pkg --release
+wasm-pack build weather_lib --target web --out-dir weather_web/web-gui/pkg --release --scope weather
 ```
 
 ## Usage
@@ -77,7 +79,7 @@ wasm-pack build --target web --out-dir web-gui/pkg --release
 Run the CLI with your ZIP code:
 
 ```bash
-./target/release/weather-cli --zip N7L --country CA
+./target/release/weather_cli --zip N7L --country CA
 ```
 
 ### Web Interface
@@ -86,11 +88,13 @@ The application includes a web-based GUI that can be accessed through a browser:
 
 1. Build the WebAssembly module:
 ```bash
+cd weather_web
 npm run build-wasm
 ```
 
 2. Start the local web server:
 ```bash
+cd weather_web
 npm run serve
 ```
 
@@ -113,37 +117,45 @@ npm run serve
 Get weather for a US ZIP code in imperial units:
 
 ```bash
-./target/release/weather-cli --zip 90210 --country US --units imperial
+./target/release/weather_cli --zip 90210 --country US --units imperial
 ```
 
 Get weather for a Canadian postal code in metric units with full output:
 
 ```bash
-./target/release/weather-cli --zip N7L --country CA --units metric
+./target/release/weather_cli --zip N7L --country CA --units metric
 ```
 
 ## Project Structure
 
 ```
-├── src/
-│   ├── location/           # Location-related modules
-│   │   ├── client.rs       # Client for geocoding API
-│   │   ├── mod.rs          # Module exports
-│   │   ├── types.rs        # Location data structures
-│   │   └── wasm.rs         # WebAssembly bindings for location
-│   ├── weather/            # Weather-related modules
-│   │   ├── client.rs       # Client for weather API
-│   │   ├── mod.rs          # Module exports
-│   │   └── types.rs        # Weather data structures
-│   ├── lib.rs              # Library exports
-│   └── main.rs             # CLI entry point and argument parsing
-├── web-gui/                # Web interface files
-│   ├── index.html          # Main HTML page
-│   ├── style.css           # Styling for the web interface
-│   ├── script.js           # JavaScript for web interface
-│   └── pkg/                # WebAssembly compiled output
-├── Cargo.toml              # Rust dependencies
-├── package.json            # Node.js dependencies and scripts
+├── weather_lib/            # Core library code
+│   ├── src/                # Library source code
+│   │   ├── location/       # Location-related modules
+│   │   │   ├── client.rs   # Client for geocoding API
+│   │   │   ├── mod.rs      # Module exports
+│   │   │   ├── types.rs    # Location data structures
+│   │   │   └── wasm.rs     # WebAssembly bindings for location
+│   │   ├── weather/        # Weather-related modules
+│   │   │   ├── client.rs   # Client for weather API
+│   │   │   ├── mod.rs      # Module exports
+│   │   │   └── types.rs    # Weather data structures
+│   │   └── lib.rs          # Library exports
+│   └── Cargo.toml          # Library dependencies
+├── weather_cli/            # Command-line interface
+│   ├── src/                # CLI source code
+│   │   └── main.rs         # CLI entry point and argument parsing
+│   └── Cargo.toml          # CLI dependencies
+├── weather_web/            # Web interface
+│   ├── web-gui/            # Web interface files
+│   │   ├── index.html      # Main HTML page
+│   │   ├── style.css       # Styling for the web interface
+│   │   ├── script.js       # JavaScript for web interface
+│   │   └── pkg/            # WebAssembly compiled output
+│   ├── package.json        # Node.js dependencies and scripts
+│   └── package-lock.json   # Lock file for package versions
+├── Cargo.toml              # Workspace configuration
+├── Makefile.toml           # Build tasks
 └── .env                    # Environment variables (not in repo)
 ```
 
@@ -176,29 +188,30 @@ This tool integrates with two OpenWeatherMap APIs:
 ### Building the CLI
 
 ```bash
-cargo build
+cargo build -p weather_cli
 ```
 
 ### Running in Debug Mode
 
 ```bash
-cargo run -- --zip N7L --country CA
+cargo run -p weather_cli -- --zip N7L --country CA
 ```
 
 ### Running Tests
 
 ```bash
-cargo test
+cargo test -p weather_lib
 ```
 
 ### Building for WebAssembly
 
 ```bash
 # Using npm script (recommended)
+cd weather_web
 npm run build-wasm
 
 # Or manually with wasm-pack
-wasm-pack build --target web --out-dir web-gui/pkg
+wasm-pack build ../weather_lib --target web --out-dir ../weather_web/web-gui/pkg --dev --scope weather
 ```
 
 The above commands will:
@@ -210,6 +223,8 @@ The above commands will:
 ### Developing the Web Interface
 
 ```bash
+cd weather_web
+
 # Build WASM and start local server in one command
 npm run dev
 
@@ -218,6 +233,56 @@ npm run serve
 ```
 
 This will start a local development server at http://localhost:8000 where you can test the web interface.
+
+## Makefile.toml Tasks
+
+This project uses [cargo-make](https://github.com/sagiegurari/cargo-make) to simplify common development tasks. To use these tasks, install cargo-make:
+
+```bash
+cargo install cargo-make
+```
+
+Then you can run the following tasks:
+
+### Build WebAssembly (Development)
+
+```bash
+cargo make build-wasm
+```
+
+Builds the WebAssembly module in development mode with debugging information. This task compiles the `weather_lib` crate to WebAssembly and outputs it to the `../weather_web/web-gui/pkg` directory with the `weather` scope.
+
+### Build WebAssembly (Release)
+
+```bash
+cargo make build-wasm-release
+```
+
+Builds the WebAssembly module in release mode with optimizations. Similar to `build-wasm` but produces a smaller, faster build suitable for production use.
+
+### Start Development Server
+
+```bash
+cargo make serve
+```
+
+Starts a Python HTTP server on port 8000 serving the web GUI. This task makes the web interface accessible at `http://localhost:8000`.
+
+### Clean Project
+
+```bash
+cargo make clean
+```
+
+Removes build artifacts including the WebAssembly package directory and the Rust target directory.
+
+### Development Workflow
+
+```bash
+cargo make dev
+```
+
+Combines the `build-wasm` and `serve` tasks in sequence. This is the recommended command during development as it builds the WebAssembly module and immediately starts the web server.
 
 ## WebAssembly Support
 
@@ -239,7 +304,7 @@ This application can be compiled to WebAssembly for use in web browsers:
 
 ```javascript
 // Import the WASM package (using ES modules)
-import init, { getLocation, getCurrentWeather } from './pkg/weather.js';
+import init, { getLocation, getCurrentWeather } from './pkg/weather_lib.js';
 
 async function run() {
   // Initialize the WASM module
@@ -278,4 +343,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 *Note: This tool requires a valid OpenWeatherMap API key to function properly.*
 
 ---
-*Last updated: July 11, 2025*
+*Last updated: July 12, 2025*

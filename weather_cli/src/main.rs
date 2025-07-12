@@ -1,8 +1,9 @@
 use std::env;
 use clap::Parser;
-use weather::{location::LocationClient, weather::WeatherClient};
-
 use dotenv::dotenv;
+
+use weather_lib::location::LocationClient;
+use weather_lib::weather::WeatherClient;
 
 const OPENWEATHERMAP_API_KEY: &str = "OPENWEATHERMAP_API_KEY";
 

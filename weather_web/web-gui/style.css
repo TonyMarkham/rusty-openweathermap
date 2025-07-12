@@ -154,12 +154,12 @@ button:disabled {
     .container {
         margin: 10px;
     }
-    
+
     h1 {
         font-size: 2em;
         padding: 20px;
     }
-    
+
     .form-container, .results {
         padding: 20px;
     }

@@ -1,0 +1,36 @@
+﻿[config]
+# Set the default working directory to the workspace root
+default_to_workspace = false
+
+[tasks.build]
+command = "cargo"
+args = ["build"]
+cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
+
+[tasks.build-wasm]
+command = "wasm-pack"
+args = ["build", "weather_lib", "--target", "web", "--out-dir", "../weather_web/web-gui/pkg", "--dev", "--scope", "weather"]
+cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
+
+[tasks.build-wasm-release]
+command = "wasm-pack"
+args = ["build", "weather_lib", "--target", "web", "--out-dir", "../weather_web/web-gui/pkg", "--release", "--scope", "weather"]
+cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
+
+[tasks.serve]
+command = "python"
+args = ["-m", "http.server", "8000", "--directory", "weather_web/web-gui"]
+cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
+
+[tasks.clean]
+clear = true
+script = '''
+#!@duckscript
+rm -r weather_web/web-gui/pkg
+rm -r target
+'''
+
+[tasks.dev]
+dependencies = ["build", "build-wasm"]
+command = "python"
+args = ["-m", "http.server", "8000", "--directory", "weather_web/web-gui"]
