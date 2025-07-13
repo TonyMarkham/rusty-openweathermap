@@ -26,8 +26,8 @@ A Rust-based application that provides current weather information for a specifi
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/weather-app.git
-cd weather-app
+git clone https://github.com/TonyMarkham/rusty-openweathermap.git
+cd rusty-openweathermap
 
 # Create a .env file with your API key
 echo "OPENWEATHERMAP_API_KEY=your_api_key_here" > .env
