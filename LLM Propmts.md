@@ -11,3 +11,16 @@
 >> 
 >> Be certain to note that this solution should contain a CLI implementation.
 > 
+>> ## Update `README.md`
+>> Please review this Rust Project and generate a comprehensive `README.md`
+>>
+>> Be certain to include a Project Structure.
+>>
+>> Be certain to include a section for cloning the repository.
+>>
+>> Be certain to include a section for using the `Makefile.toml` tasks.
+>>
+>> Be certain to include a section for running the CLI.
+>> 
+>> Be certain to include a section for running the Web GUI.
+> 

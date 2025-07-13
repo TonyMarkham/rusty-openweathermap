@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "weather_lib",
     "weather_cli",
+    "weather_web",
 ]
 resolver = "3"

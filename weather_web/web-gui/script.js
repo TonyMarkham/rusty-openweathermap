@@ -4,7 +4,7 @@ async function initWasm() {
     try {
         console.log('Loading WASM module...');
         // Import the WASM module
-        wasmModule = await import('./pkg/weather_lib.js');
+        wasmModule = await import('./pkg/weather_web.js');
         console.log('WASM module imported:', wasmModule);
 
         // Initialize the module

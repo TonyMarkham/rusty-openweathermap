@@ -805,6 +805,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "openweathermap_lib"
+version = "0.1.0-pre.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23f8665de7104535c0dfb1fe2aaeaea978b66ebd23f6cd336690637acc5e0aad"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1499,19 +1512,15 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "dotenv",
+ "openweathermap_lib",
  "tokio",
- "weather_lib",
 ]
 
 [[package]]
-name = "weather_lib"
+name = "weather_web"
 version = "0.1.0"
 dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
+ "openweathermap_lib",
 ]
 
 [[package]]

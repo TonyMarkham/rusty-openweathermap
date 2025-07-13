@@ -2,19 +2,32 @@
 # Set the default working directory to the workspace root
 default_to_workspace = false
 
-[tasks.build]
+[tasks.build-dev]
 command = "cargo"
 args = ["build"]
 cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
 
-[tasks.build-wasm]
+[tasks.build-web-wasm-dev]
+command = "cargo"
+args = ["build", "--target", "wasm32-unknown-unknown"]
+cwd = "weather_web"
+
+[tasks.bindgen-dev]
+# cargo install wasm-bindgen-cli
+command = "wasm-bindgen"
+args = ["target/wasm32-unknown-unknown/debug/weather_web.wasm", "--out-dir", "weather_web/web-gui/pkg", "--target", "web"]
+cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
+
+[tasks.build-wasm-dev]
+# cargo install wasm-pack
 command = "wasm-pack"
-args = ["build", "weather_lib", "--target", "web", "--out-dir", "../weather_web/web-gui/pkg", "--dev", "--scope", "weather"]
+args = ["build", "weather_web", "--target", "web", "--out-dir", "../weather_web/web-gui/pkg", "--dev", "--scope", "weather"]
 cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
 
 [tasks.build-wasm-release]
+# cargo install wasm-pack
 command = "wasm-pack"
-args = ["build", "weather_lib", "--target", "web", "--out-dir", "../weather_web/web-gui/pkg", "--release", "--scope", "weather"]
+args = ["build", "weather_web", "--target", "web", "--out-dir", "../weather_web/web-gui/pkg", "--release", "--scope", "weather"]
 cwd = "${CARGO_MAKE_WORKING_DIRECTORY}"
 
 [tasks.serve]
@@ -30,7 +43,7 @@ rm -r weather_web/web-gui/pkg
 rm -r target
 '''
 
-[tasks.dev]
-dependencies = ["build", "build-wasm"]
+[tasks.run-dev]
+dependencies = ["build-dev", "build-web-wasm-dev", "build-wasm-dev"]
 command = "python"
 args = ["-m", "http.server", "8000", "--directory", "weather_web/web-gui"]
