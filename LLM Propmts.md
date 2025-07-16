@@ -1,6 +1,8 @@
 ﻿> # LLM Prompts
 >> ## Generate `Feedback.md`
->> Please review and critique the weather_lib rust module and provide the results of this feedback in `Feedback.md`.
+>> Please review and critique this rust application and provide the results of this feedback in Feedback.md.
+>> 
+>> Ignore the README.md, only look at the codebase.
 > 
 >> ## Generate `Weather PRD.md`
 >> Please generate a Product Requirements Document as `Weather PRD.md` that would accurately re-create this project when sent to an LLM as an attachment.
